@@ -1,0 +1,119 @@
+body{
+    margin: 0;
+    font-style: oblique
+}
+header,h1{
+    margin: 0;
+}
+header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    background: #ffd900;
+    background: radial-gradient(circle, rgba(255, 217, 0, 1) 0%, rgba(189, 138, 0, 1) 100%);
+    font-size: 30px;
+    z-index: 1000;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.parent {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 8px;
+    padding-top: 115px; /* misma altura que el header */
+}
+    
+.div2 {
+    grid-row: span 10 / span 10;
+}
+
+.div3 {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;  
+    align-items: flex-start;  
+    gap: 20px;              
+    grid-column: span 8 / span 8;
+    grid-row: span 10 / span 10;
+    background-color: whitesmoke;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    border-radius: 5px;
+    padding: 20px;
+}
+
+.div4 {
+    grid-row: span 10 / span 10;
+    grid-column-start: 10;
+}
+
+.imagen{
+    width: 250px;
+    height: 250px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    transition: 0.5s;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* NUEVA REGLA: Aplicar estilo a la imagen DENTRO del contenedor .imagen */
+.imagen img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ajusta la imagen completa dentro del cuadrado, dejando bordes si es necesario */
+}
+/* FIN NUEVA REGLA */
+
+
+.imagen:target {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 2000;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.imagen:target img {
+    width: auto;
+    height: auto;
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+}
+
+.imagen:hover{
+    width: 260px;
+    height: 260px;
+}
+
+.video-miniatura {
+    width: 250px;
+    height: 250px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    transition: 0.5s;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.video-miniatura:hover{
+    width: 260px;
+    height: 260px;
+}
+
+.video-miniatura img, 
+.video-miniatura video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
