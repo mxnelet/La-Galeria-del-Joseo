@@ -5,14 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="16x16" href="imgs/icon.png">
     <title>La Galeria del Joseo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>  
 <header>
-    <h1>La Galeria del Joseo</h1>
+    <span class="titulo-nav">La Galeria del Joseo</span>
+    <a class="enlace-nav" href="#galeria">Ver galería</a>
 </header>
-<div class="parent">
-        <div class="div2"></div>
+<main>
+<section class="hero">
+    <p class="kicker">La Galeria del Joseo</p>
+    <h1>Fotos y vídeos.<br>Todo en un solo lugar.</h1>
+    <p class="subtitulo">Una colección de recuerdos, página a página.</p>
+</section>
+<div class="parent" id="galeria">
+    <div class="galeria-cabecera">
+        <h2>Galería</h2>
+    </div>
     <div class="div3">
     <a href="imgs/1000048938.JPG" class="imagen">
         <img src="imgs/1000048938.JPG" alt="">
@@ -999,8 +1011,159 @@
         <img src="imgs/28751.JPG" alt="">
     </a>        
 </div>
-    <div class="div4"></div>
 </div>
-     
+</main>
+<footer>La Galeria del Joseo</footer>
+
+<div class="visor" id="visor">
+    <button class="cerrar" aria-label="Cerrar">&times;</button>
+    <button class="anterior" aria-label="Anterior">&#10094;</button>
+    <div id="visor-contenido"></div>
+    <button class="siguiente" aria-label="Siguiente">&#10095;</button>
+    <span class="contador" id="visor-contador"></span>
+</div>
+
+<script>
+(function () {
+    var POR_PAGINA = 24; // cambia este número para mostrar más o menos elementos por página
+
+    var contenedor = document.querySelector('.div3');
+    var items = Array.prototype.slice.call(
+        contenedor.querySelectorAll(':scope > .imagen, :scope > .video-miniatura')
+    );
+
+    // Sacamos todo del DOM: solo se renderizará la página actual
+    items.forEach(function (el) { contenedor.removeChild(el); });
+
+    var total = items.length;
+    var totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
+    var paginaActual = 1;
+
+    var navArriba = document.createElement('nav');
+    var navAbajo = document.createElement('nav');
+    navArriba.className = navAbajo.className = 'paginacion';
+    navArriba.setAttribute('aria-label', 'Paginación');
+    navAbajo.setAttribute('aria-label', 'Paginación inferior');
+    contenedor.appendChild(navArriba);
+    contenedor.appendChild(navAbajo);
+
+    function crearBoton(texto, pagina, opts) {
+        opts = opts || {};
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = texto;
+        if (opts.activa) { b.className = 'activa'; b.setAttribute('aria-current', 'page'); }
+        if (opts.deshabilitado) b.disabled = true;
+        b.addEventListener('click', function () { irAPagina(pagina, true); });
+        return b;
+    }
+
+    function numerosVisibles() {
+        var set = {};
+        [1, totalPaginas, paginaActual - 1, paginaActual, paginaActual + 1].forEach(function (n) {
+            if (n >= 1 && n <= totalPaginas) set[n] = true;
+        });
+        return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+    }
+
+    function pintarNav(nav) {
+        nav.innerHTML = '';
+        nav.appendChild(crearBoton('«', paginaActual - 1, { deshabilitado: paginaActual === 1 }));
+        var previo = 0;
+        numerosVisibles().forEach(function (n) {
+            if (n - previo > 1) {
+                var p = document.createElement('span');
+                p.className = 'puntos';
+                p.textContent = '…';
+                nav.appendChild(p);
+            }
+            nav.appendChild(crearBoton(n, n, { activa: n === paginaActual }));
+            previo = n;
+        });
+        nav.appendChild(crearBoton('»', paginaActual + 1, { deshabilitado: paginaActual === totalPaginas }));
+    }
+
+    function irAPagina(n, subir) {
+        paginaActual = Math.min(Math.max(1, n), totalPaginas);
+
+        // Quitar los elementos de la página anterior
+        items.forEach(function (el) { if (el.parentNode === contenedor) contenedor.removeChild(el); });
+
+        // Añadir solo los de la página actual (entre los dos paginadores)
+        var inicio = (paginaActual - 1) * POR_PAGINA;
+        var fin = Math.min(inicio + POR_PAGINA, total);
+        var frag = document.createDocumentFragment();
+        for (var i = inicio; i < fin; i++) {
+            var img = items[i].querySelector('img');
+            if (img) { img.loading = 'lazy'; img.decoding = 'async'; }
+            frag.appendChild(items[i]);
+        }
+        contenedor.insertBefore(frag, navAbajo);
+
+        pintarNav(navArriba);
+        pintarNav(navAbajo);
+        history.replaceState(null, '', paginaActual === 1 ? location.pathname : '#pagina-' + paginaActual);
+        if (subir) document.getElementById('galeria').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ===== Visor =====
+    var visor = document.getElementById('visor');
+    var visorContenido = document.getElementById('visor-contenido');
+    var visorContador = document.getElementById('visor-contador');
+    var indiceVisor = 0;
+
+    function rutaDe(el) {
+        return el.classList.contains('video-miniatura') ? el.dataset.src : el.getAttribute('href');
+    }
+
+    function esImagen(ruta) { return /\.(jpe?g|png|gif|webp)$/i.test(ruta); }
+
+    function mostrar(i) {
+        indiceVisor = (i + total) % total;
+        var ruta = rutaDe(items[indiceVisor]);
+        visorContenido.innerHTML = '';
+        var m;
+        if (esImagen(ruta)) {
+            m = document.createElement('img');
+            m.src = ruta;
+        } else {
+            m = document.createElement('video');
+            m.src = ruta;
+            m.controls = true;
+            m.autoplay = true;
+        }
+        visorContenido.appendChild(m);
+        visorContador.textContent = (indiceVisor + 1) + ' / ' + total;
+        visor.classList.add('abierto');
+    }
+
+    function cerrar() {
+        visor.classList.remove('abierto');
+        visorContenido.innerHTML = ''; // detiene vídeo y libera memoria
+    }
+
+    contenedor.addEventListener('click', function (e) {
+        var el = e.target.closest('.imagen, .video-miniatura');
+        if (!el) return;
+        e.preventDefault();
+        mostrar(items.indexOf(el));
+    });
+
+    visor.querySelector('.cerrar').addEventListener('click', cerrar);
+    visor.querySelector('.anterior').addEventListener('click', function () { mostrar(indiceVisor - 1); });
+    visor.querySelector('.siguiente').addEventListener('click', function () { mostrar(indiceVisor + 1); });
+    visor.addEventListener('click', function (e) { if (e.target === visor) cerrar(); });
+    document.addEventListener('keydown', function (e) {
+        if (!visor.classList.contains('abierto')) return;
+        if (e.key === 'Escape') cerrar();
+        if (e.key === 'ArrowLeft') mostrar(indiceVisor - 1);
+        if (e.key === 'ArrowRight') mostrar(indiceVisor + 1);
+    });
+
+    // Página inicial (por si se entra con #pagina-3)
+    var m = /^#pagina-(\d+)$/.exec(location.hash);
+    irAPagina(m ? parseInt(m[1], 10) : 1, false);
+})();
+</script>
 </body>
 </html>
